@@ -4,10 +4,15 @@ import com.leclowndu93150.mythicdimreturn.config.DimensionRestrictionConfig;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -26,6 +31,7 @@ public class DimensionRestrictionManager {
         int warnings;
         boolean countdownActive;
         long lastPermissionCheck;
+        ResourceKey<Level> lastDimension;
     }
     
     public DimensionRestrictionManager(DimensionRestrictionConfig config) {
@@ -60,6 +66,13 @@ public class DimensionRestrictionManager {
         if (api == null) return;
         
         ResourceKey<Level> currentDimension = player.level().dimension();
+        PlayerRestrictionData data = playerData.computeIfAbsent(player.getUUID(), k -> new PlayerRestrictionData());
+        
+        if (data.lastDimension == null || !data.lastDimension.equals(currentDimension)) {
+            updateGravityForDimension(player, currentDimension);
+            data.lastDimension = currentDimension;
+        }
+        
         DimensionRestrictionConfig.DimensionRestriction restriction = config.getRestriction(currentDimension);
         
         if (restriction == null) {
@@ -71,8 +84,6 @@ public class DimensionRestrictionManager {
         if (user == null) return;
         
         boolean hasPermission = user.getCachedData().getPermissionData().checkPermission(restriction.requiredPermission).asBoolean();
-        
-        PlayerRestrictionData data = playerData.computeIfAbsent(player.getUUID(), k -> new PlayerRestrictionData());
         
         if (hasPermission) {
             if (data.countdownActive) {
@@ -130,5 +141,31 @@ public class DimensionRestrictionManager {
     
     public void removePlayerData(UUID uuid) {
         playerData.remove(uuid);
+    }
+    
+    private static final ResourceLocation GRAVITY_MODIFIER_ID = ResourceLocation.parse("mythicdimreturn:dimension_gravity");
+    
+    private void updateGravityForDimension(ServerPlayer player, ResourceKey<Level> dimension) {
+        AttributeInstance gravityAttribute = player.getAttribute(Attributes.GRAVITY);
+        if (gravityAttribute == null) return;
+        
+        DimensionRestrictionConfig.DimensionGravity gravity = config.getDimensionGravity(dimension);
+        AttributeModifier existingModifier = gravityAttribute.getModifier(GRAVITY_MODIFIER_ID);
+        
+        if (gravity == null) {
+            if (existingModifier != null) {
+                gravityAttribute.removeModifier(GRAVITY_MODIFIER_ID);
+            }
+        } else {
+            if (existingModifier == null || existingModifier.amount() != gravity.gravityModifier) {
+                gravityAttribute.removeModifier(GRAVITY_MODIFIER_ID);
+                AttributeModifier modifier = new AttributeModifier(
+                    GRAVITY_MODIFIER_ID,
+                    gravity.gravityModifier,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+                );
+                gravityAttribute.addPermanentModifier(modifier);
+            }
+        }
     }
 }

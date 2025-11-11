@@ -19,6 +19,7 @@ public class DimensionRestrictionConfig {
     private static final String CONFIG_FILE = "config/mythicdimreturn.json";
     
     public List<DimensionRestriction> restrictions = new ArrayList<>();
+    public List<DimensionGravity> dimensionGravity = new ArrayList<>();
     
     public static class DimensionRestriction {
         public String dimensionId;
@@ -95,6 +96,12 @@ public class DimensionRestrictionConfig {
         
         config.restrictions.add(example);
         
+        DimensionGravity gravityExample = new DimensionGravity();
+        gravityExample.dimensionId = "minecraft:the_end";
+        gravityExample.gravityModifier = -0.5;
+        
+        config.dimensionGravity.add(gravityExample);
+        
         return config;
     }
     
@@ -102,6 +109,24 @@ public class DimensionRestrictionConfig {
         for (DimensionRestriction restriction : restrictions) {
             if (restriction.getDimensionKey().equals(dimension)) {
                 return restriction;
+            }
+        }
+        return null;
+    }
+    
+    public static class DimensionGravity {
+        public String dimensionId;
+        public double gravityModifier;
+        
+        public ResourceKey<Level> getDimensionKey() {
+            return ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(dimensionId));
+        }
+    }
+    
+    public DimensionGravity getDimensionGravity(ResourceKey<Level> dimension) {
+        for (DimensionGravity gravity : dimensionGravity) {
+            if (gravity.getDimensionKey().equals(dimension)) {
+                return gravity;
             }
         }
         return null;
