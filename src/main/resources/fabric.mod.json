@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "mythicdimreturn",
+  "version": "${version}",
+
+  "name": "mythicdimreturn",
+  "description": "",
+  "authors": [],
+  "contact": {},
+
+  "license": "MIT",
+  "icon": "assets/mythicdimreturn/icon.png",
+
+  "environment": "server",
+  "entrypoints": {
+    "main": ["com.leclowndu93150.mythicdimreturn.Mythicdimreturn"]
+  },
+
+  "mixins": [
+    "mythicdimreturn.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
