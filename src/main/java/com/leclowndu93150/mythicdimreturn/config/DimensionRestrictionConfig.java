@@ -20,6 +20,7 @@ public class DimensionRestrictionConfig {
     
     public List<DimensionRestriction> restrictions = new ArrayList<>();
     public List<DimensionGravity> dimensionGravity = new ArrayList<>();
+    public List<DoubleJumpConfig> doubleJump = new ArrayList<>();
     
     public static class DimensionRestriction {
         public String dimensionId;
@@ -102,6 +103,60 @@ public class DimensionRestrictionConfig {
         
         config.dimensionGravity.add(gravityExample);
         
+        DoubleJumpConfig djPermissionExample = new DoubleJumpConfig();
+        djPermissionExample.dimensionId = "minecraft:overworld";
+        djPermissionExample.maxDoubleJumps = 2;
+        djPermissionExample.cooldownSeconds = 1;
+        djPermissionExample.jumpMessage = "&aDouble Jump! &7[{remaining}/{max}]";
+        djPermissionExample.refill.secondsPerRefill = 60;
+        djPermissionExample.refill.maxAutoRefill = 1;
+        
+        DoubleJumpConfig.AccessRule permRule = new DoubleJumpConfig.AccessRule();
+        permRule.permission = "mythicdimreturn.doublejump.overworld";
+        djPermissionExample.accessRules.add(permRule);
+        
+        config.doubleJump.add(djPermissionExample);
+        
+        DoubleJumpConfig djArmorExample = new DoubleJumpConfig();
+        djArmorExample.dimensionId = "minecraft:the_nether";
+        djArmorExample.maxDoubleJumps = 3;
+        djArmorExample.cooldownSeconds = 2;
+        djArmorExample.jumpMessage = "&6Nether Jump! &c[{remaining}/{max}]";
+        djArmorExample.refill.secondsPerRefill = 45;
+        djArmorExample.refill.maxAutoRefill = 2;
+        
+        DoubleJumpConfig.AccessRule armorRule = new DoubleJumpConfig.AccessRule();
+        armorRule.armorRequirement = new DoubleJumpConfig.AccessRule.ArmorRequirement();
+        armorRule.armorRequirement.helmet = "minecraft:netherite_helmet";
+        armorRule.armorRequirement.chestplate = "minecraft:netherite_chestplate";
+        armorRule.armorRequirement.leggings = "";
+        armorRule.armorRequirement.boots = "";
+        djArmorExample.accessRules.add(armorRule);
+        
+        config.doubleJump.add(djArmorExample);
+        
+        DoubleJumpConfig djMixedExample = new DoubleJumpConfig();
+        djMixedExample.dimensionId = "minecraft:the_end";
+        djMixedExample.maxDoubleJumps = 5;
+        djMixedExample.cooldownSeconds = 0;
+        djMixedExample.jumpMessage = "&dEnd Jump! &5[{remaining}/{max}]";
+        djMixedExample.refill.secondsPerRefill = 30;
+        djMixedExample.refill.maxAutoRefill = 3;
+        
+        DoubleJumpConfig.AccessRule mixedPermRule = new DoubleJumpConfig.AccessRule();
+        mixedPermRule.permission = "mythicdimreturn.doublejump.end";
+        djMixedExample.accessRules.add(mixedPermRule);
+        
+        DoubleJumpConfig.AccessRule mixedArmorRule = new DoubleJumpConfig.AccessRule();
+        mixedArmorRule.armorRequirement = new DoubleJumpConfig.AccessRule.ArmorRequirement();
+        mixedArmorRule.armorRequirement.helmet = "";
+        mixedArmorRule.armorRequirement.chestplate = "";
+        mixedArmorRule.armorRequirement.leggings = "";
+        mixedArmorRule.armorRequirement.boots = "minecraft:elytra";
+        djMixedExample.accessRules.add(mixedArmorRule);
+        
+        config.doubleJump.add(djMixedExample);
+        
         return config;
     }
     
@@ -127,6 +182,45 @@ public class DimensionRestrictionConfig {
         for (DimensionGravity gravity : dimensionGravity) {
             if (gravity.getDimensionKey().equals(dimension)) {
                 return gravity;
+            }
+        }
+        return null;
+    }
+    
+    public static class DoubleJumpConfig {
+        public String dimensionId;
+        public int maxDoubleJumps = 2;
+        public int cooldownSeconds = 1;
+        public String jumpMessage = "&aDouble Jump! &7[{remaining}/{max}]";
+        public RefillSettings refill = new RefillSettings();
+        public List<AccessRule> accessRules = new ArrayList<>();
+        
+        public static class RefillSettings {
+            public int secondsPerRefill = 60;
+            public int maxAutoRefill = 1;
+        }
+        
+        public static class AccessRule {
+            public String permission = "";
+            public ArmorRequirement armorRequirement = null;
+            
+            public static class ArmorRequirement {
+                public String helmet = "";
+                public String chestplate = "";
+                public String leggings = "";
+                public String boots = "";
+            }
+        }
+        
+        public ResourceKey<Level> getDimensionKey() {
+            return ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(dimensionId));
+        }
+    }
+    
+    public DoubleJumpConfig getDoubleJumpConfig(ResourceKey<Level> dimension) {
+        for (DoubleJumpConfig config : doubleJump) {
+            if (config.getDimensionKey().equals(dimension)) {
+                return config;
             }
         }
         return null;
